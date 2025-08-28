@@ -1,0 +1,137 @@
+import random
+
+# Objective: Minimize weight = length * thickness
+def objective_function(chromosome):
+    length, thickness = chromosome
+    density = 7.85  # Steel density (g/cm^3)
+    weight = density * length * thickness
+    return weight
+
+# Constraints: valid length and thickness
+def check_constraints(chromosome):
+    length, thickness = chromosome
+    return 10 <= length <= 100 and 1 <= thickness <= 10
+
+# Generate initial random population
+def generate_population(size):
+    population = []
+    for _ in range(size):
+        length = random.uniform(10, 100)
+        thickness = random.uniform(1, 10)
+        population.append([length, thickness])
+    return population
+
+# Evaluate fitness (lower weight = better)
+def evaluate_fitness(population):
+    fitness_list = []
+    for chrom in population:
+        if check_constraints(chrom):
+            fitness = objective_function(chrom)
+        else:
+            fitness = float('inf')  # Penalize invalid
+        fitness_list.append((chrom, fitness))
+    return fitness_list
+
+# Roulette Wheel Selection
+def select(population):
+    fitness_list = evaluate_fitness(population)
+    total_fitness = sum(1 / f for _, f in fitness_list if f != float('inf'))
+    pick = random.uniform(0, total_fitness)
+    current = 0
+    for chrom, fit in fitness_list:
+        if fit == float('inf'):
+            continue
+        current += 1 / fit
+        if current > pick:
+            return chrom
+    return random.choice(population)
+
+# Single-point crossover
+def crossover(parent1, parent2):
+    point = random.randint(1, 1)  # only 2 genes
+    child1 = parent1[:point] + parent2[point:]
+    child2 = parent2[:point] + parent1[point:]
+    return child1, child2
+
+# Mutate a chromosome
+def mutate(chromosome, mutation_rate=0.1):
+    if random.random() < mutation_rate:
+        gene_index = random.randint(0, 1)
+        if gene_index == 0:
+            chromosome[0] = random.uniform(10, 100)
+        else:
+            chromosome[1] = random.uniform(1, 10)
+    return chromosome
+
+# Main GA loop
+def genetic_algorithm(pop_size, generations, mutation_rate=0.1):
+    population = generate_population(pop_size)
+    for gen in range(generations):
+        new_population = []
+        while len(new_population) < pop_size:
+            p1 = select(population)
+            p2 = select(population)
+            c1, c2 = crossover(p1, p2)
+            new_population.append(mutate(c1[:], mutation_rate))
+            if len(new_population) < pop_size:
+                new_population.append(mutate(c2[:], mutation_rate))
+        population = new_population
+
+        # Print best of current generation
+        fitness_list = evaluate_fitness(population)
+        best = min(fitness_list, key=lambda x: x[1])
+        print(f"Generation {gen + 1}: Best = {best[0]}, Weight = {round(best[1], 2)}")
+
+    # Final best solution
+    return min(evaluate_fitness(population), key=lambda x: x[1])
+
+# Run the algorithm
+best = genetic_algorithm(pop_size=20, generations=30)
+print("\nOptimal Design Found:")
+print("Length:", round(best[0][0], 2))
+print("Thickness:", round(best[0][1], 2))
+print("Minimum Weight:", round(best[1], 2))
+
+
+
+OUTPUT:
+Python 3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)] on win32
+Enter "help" below or click "Help" above for more information.
+
+= RESTART: C:/Users/Administrator/AppData/Local/Programs/Python/Python313/ga.py
+Generation 1: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 2: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 3: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 4: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 5: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 6: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 7: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 8: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 9: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 10: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 11: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 12: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 13: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 14: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 15: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 16: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 17: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 18: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 19: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 20: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 21: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 22: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 23: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 24: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 25: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 26: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 27: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 28: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 29: Best = [15.035112562442398, 1.361562426543079], Weight = 160.7
+Generation 30: Best = [13.62897828665665, 1.361562426543079], Weight = 145.67
+
+Optimal Design Found:
+Length: 13.63
+Thickness: 1.36
+Minimum Weight: 145.67
+
