@@ -1,0 +1,149 @@
+import random
+
+# -----------------------------
+# Problem Setup
+# -----------------------------
+GRID_SIZE = 5
+START = (0, 0)
+GOAL = (4, 4)
+MOVES = ['R', 'D']  # Right or Down
+
+# -----------------------------
+# Chromosome Handling
+# -----------------------------
+def random_chromosome(length=8):
+    """Generate random path (chromosome)"""
+    return [random.choice(MOVES) for _ in range(length)]
+
+def decode_path(chromosome):
+    """Follow moves and return final position"""
+    x, y = START
+    for move in chromosome:
+        if move == 'R' and x < GRID_SIZE - 1:
+            x += 1
+        elif move == 'D' and y < GRID_SIZE - 1:
+            y += 1
+    return (x, y)
+
+def fitness(chromosome):
+    """Fitness = distance to goal (smaller is better)"""
+    x, y = decode_path(chromosome)
+    return abs(GOAL[0] - x) + abs(GOAL[1] - y)
+
+# -----------------------------
+# Genetic Operators
+# -----------------------------
+def crossover(parent1, parent2):
+    """Single point crossover"""
+    point = random.randint(1, len(parent1)-1)
+    child1 = parent1[:point] + parent2[point:]
+    child2 = parent2[:point] + parent1[point:]
+    return child1, child2
+
+def mutate(chromosome):
+    """Randomly change one move"""
+    idx = random.randint(0, len(chromosome)-1)
+    chromosome[idx] = random.choice(MOVES)
+    return chromosome
+
+# -----------------------------
+# Gene Expression Algorithm
+# -----------------------------
+def gene_expression_algorithm(n=20, G=50, Pc=0.7, Pm=0.3):
+    # Step 1: Initial population
+    population = [random_chromosome() for _ in range(n)]
+
+    for gen in range(G):
+        new_population = []
+        while len(new_population) < n:
+            # Selection (tournament)
+            parent1 = min(random.sample(population, 3), key=fitness)
+            parent2 = min(random.sample(population, 3), key=fitness)
+
+            # Crossover
+            if random.random() < Pc:
+                child1, child2 = crossover(parent1[:], parent2[:])
+            else:
+                child1, child2 = parent1[:], parent2[:]
+
+            # Mutation
+            if random.random() < Pm:
+                child1 = mutate(child1)
+            if random.random() < Pm:
+                child2 = mutate(child2)
+
+            new_population.extend([child1, child2])
+
+        population = new_population
+
+        # Print best in each generation
+        best = min(population, key=fitness)
+        print(f"Gen {gen+1}: Best path={best}, Fitness={fitness(best)}")
+
+    return best, fitness(best)
+
+# -----------------------------
+# Run Algorithm
+# -----------------------------
+best_path, best_fit = gene_expression_algorithm()
+print("\nBest Path Found:", best_path)
+print("Final Fitness:", best_fit)
+
+
+
+
+OUTPUT:
+Gen 1: Best path=['D', 'D', 'R', 'R', 'R', 'D', 'R', 'D'], Fitness=0
+Gen 2: Best path=['D', 'D', 'R', 'R', 'R', 'D', 'R', 'D'], Fitness=0
+Gen 3: Best path=['R', 'D', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 4: Best path=['R', 'D', 'D', 'R', 'R', 'R', 'D', 'D'], Fitness=0
+Gen 5: Best path=['R', 'D', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 6: Best path=['D', 'D', 'R', 'R', 'R', 'D', 'R', 'D'], Fitness=0
+Gen 7: Best path=['D', 'D', 'R', 'R', 'R', 'D', 'R', 'D'], Fitness=0
+Gen 8: Best path=['R', 'D', 'R', 'D', 'D', 'R', 'R', 'D'], Fitness=0
+Gen 9: Best path=['R', 'D', 'D', 'R', 'D', 'R', 'R', 'D'], Fitness=0
+Gen 10: Best path=['D', 'D', 'R', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 11: Best path=['D', 'D', 'D', 'R', 'D', 'R', 'R', 'R'], Fitness=0
+Gen 12: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 13: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 14: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 15: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 16: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 17: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 18: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 19: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 20: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 21: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 22: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 23: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 24: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 25: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 26: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 27: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 28: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 29: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 30: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 31: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 32: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 33: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 34: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 35: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 36: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 37: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 38: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 39: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 40: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 41: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 42: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 43: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 44: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 45: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 46: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 47: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 48: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 49: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+Gen 50: Best path=['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D'], Fitness=0
+
+Best Path Found: ['D', 'R', 'D', 'D', 'R', 'R', 'R', 'D']
+Final Fitness: 0
+
