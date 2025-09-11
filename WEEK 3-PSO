@@ -1,0 +1,156 @@
+import random
+from sklearn.svm import SVC
+from sklearn.datasets import load_iris
+from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import StandardScaler
+
+# Fitness Function: Evaluate the SVM performance with given hyperparameters
+def fitness_function(params):
+    C, gamma = params  # params is a list of [C, gamma]
+    
+    # Load Iris dataset (you can change this to any dataset you like)
+    data = load_iris()
+    X = data.data
+    y = data.target
+    
+    # Feature scaling (important for SVM performance)
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    # Create and evaluate the SVM classifier
+    model = SVC(C=C, gamma=gamma)
+    scores = cross_val_score(model, X_scaled, y, cv=5)  # 5-fold cross-validation
+    
+    # The fitness is the mean accuracy from cross-validation
+    fitness = sum(scores) / len(scores)
+    return fitness
+
+
+# PSO Function to optimize C and gamma
+def pso(N, max_iter, min_C, max_C, min_gamma, max_gamma, w, c1, c2):
+    # Initialize swarm positions and velocities
+    swarm = []
+    for _ in range(N):
+        pos = [random.uniform(min_C, max_C), random.uniform(min_gamma, max_gamma)]  # Random C, gamma
+        vel = [random.uniform(-(max_C - min_C), max_C - min_C), random.uniform(-(max_gamma - min_gamma), max_gamma - min_gamma)]
+        best_pos = pos
+        fitness = fitness_function(pos)
+        best_fitness = fitness
+        swarm.append({"pos": pos, "vel": vel, "bestPos": best_pos, "fitness": fitness, "bestFitness": best_fitness})
+    
+    # Global best
+    G = swarm[0]["bestPos"]
+    Gfitness = swarm[0]["bestFitness"]
+    
+    for i in range(1, N):
+        if swarm[i]["bestFitness"] > Gfitness:
+            G = swarm[i]["bestPos"]
+            Gfitness = swarm[i]["bestFitness"]
+    
+    # Iteration loop
+    for iteration in range(max_iter):
+        for i in range(N):
+            # Update velocity and position for each particle
+            r1 = random.uniform(0, 1)
+            r2 = random.uniform(0, 1)
+            
+            for dim in range(2):  # We have two dimensions: C and gamma
+                # Update velocity
+                swarm[i]["vel"][dim] = w * swarm[i]["vel"][dim] + c1 * r1 * (swarm[i]["bestPos"][dim] - swarm[i]["pos"][dim]) + c2 * r2 * (G[dim] - swarm[i]["pos"][dim])
+                
+                # Update position
+                swarm[i]["pos"][dim] = swarm[i]["pos"][dim] + swarm[i]["vel"][dim]
+                
+                # Ensure position stays within bounds
+                if swarm[i]["pos"][dim] < (min_C if dim == 0 else min_gamma):
+                    swarm[i]["pos"][dim] = min_C if dim == 0 else min_gamma
+                elif swarm[i]["pos"][dim] > (max_C if dim == 0 else max_gamma):
+                    swarm[i]["pos"][dim] = max_C if dim == 0 else max_gamma
+
+            # Evaluate fitness (SVM model performance)
+            swarm[i]["fitness"] = fitness_function(swarm[i]["pos"])
+            
+            # Update personal best
+            if swarm[i]["fitness"] > swarm[i]["bestFitness"]:
+                swarm[i]["bestPos"] = swarm[i]["pos"]
+                swarm[i]["bestFitness"] = swarm[i]["fitness"]
+            
+            # Update global best
+            if swarm[i]["bestFitness"] > Gfitness:
+                G = swarm[i]["bestPos"]
+                Gfitness = swarm[i]["bestFitness"]
+        
+        print(f"Iteration {iteration+1}: Best Fitness = {Gfitness}")
+    
+    return G, Gfitness
+
+
+# PSO Hyperparameters
+N = 30           # Number of particles
+max_iter = 50    # Maximum iterations
+min_C = 0.001    # Min value for C
+max_C = 1000     # Max value for C
+min_gamma = 0.001  # Min value for gamma
+max_gamma = 1.0  # Max value for gamma
+w = 0.5          # Inertia weight
+c1 = 1.5         # Personal attraction coefficient
+c2 = 1.5         # Global attraction coefficient
+
+# Run PSO to find the best C and gamma
+best_params, best_fitness = pso(N, max_iter, min_C, max_C, min_gamma, max_gamma, w, c1, c2)
+
+print(f"Optimal C: {best_params[0]}, Optimal gamma: {best_params[1]}, Best fitness (accuracy): {best_fitness}")
+
+
+OUTPUT:
+Iteration 1: Best Fitness = 0.9800000000000001
+Iteration 2: Best Fitness = 0.9800000000000001
+Iteration 3: Best Fitness = 0.9800000000000001
+Iteration 4: Best Fitness = 0.9800000000000001
+Iteration 5: Best Fitness = 0.9800000000000001
+Iteration 6: Best Fitness = 0.9800000000000001
+Iteration 7: Best Fitness = 0.9800000000000001
+Iteration 8: Best Fitness = 0.9800000000000001
+Iteration 9: Best Fitness = 0.9800000000000001
+Iteration 10: Best Fitness = 0.9800000000000001
+Iteration 11: Best Fitness = 0.9800000000000001
+Iteration 12: Best Fitness = 0.9800000000000001
+Iteration 13: Best Fitness = 0.9800000000000001
+Iteration 14: Best Fitness = 0.9800000000000001
+Iteration 15: Best Fitness = 0.9800000000000001
+Iteration 16: Best Fitness = 0.9800000000000001
+Iteration 17: Best Fitness = 0.9800000000000001
+Iteration 18: Best Fitness = 0.9800000000000001
+Iteration 19: Best Fitness = 0.9800000000000001
+Iteration 20: Best Fitness = 0.9800000000000001
+Iteration 21: Best Fitness = 0.9800000000000001
+Iteration 22: Best Fitness = 0.9800000000000001
+Iteration 23: Best Fitness = 0.9800000000000001
+Iteration 24: Best Fitness = 0.9800000000000001
+Iteration 25: Best Fitness = 0.9800000000000001
+Iteration 26: Best Fitness = 0.9800000000000001
+Iteration 27: Best Fitness = 0.9800000000000001
+Iteration 28: Best Fitness = 0.9800000000000001
+Iteration 29: Best Fitness = 0.9800000000000001
+Iteration 30: Best Fitness = 0.9800000000000001
+Iteration 31: Best Fitness = 0.9800000000000001
+Iteration 32: Best Fitness = 0.9800000000000001
+Iteration 33: Best Fitness = 0.9800000000000001
+Iteration 34: Best Fitness = 0.9800000000000001
+Iteration 35: Best Fitness = 0.9800000000000001
+Iteration 36: Best Fitness = 0.9800000000000001
+Iteration 37: Best Fitness = 0.9800000000000001
+Iteration 38: Best Fitness = 0.9800000000000001
+Iteration 39: Best Fitness = 0.9800000000000001
+Iteration 40: Best Fitness = 0.9800000000000001
+Iteration 41: Best Fitness = 0.9800000000000001
+Iteration 42: Best Fitness = 0.9800000000000001
+Iteration 43: Best Fitness = 0.9800000000000001
+Iteration 44: Best Fitness = 0.9800000000000001
+Iteration 45: Best Fitness = 0.9800000000000001
+Iteration 46: Best Fitness = 0.9800000000000001
+Iteration 47: Best Fitness = 0.9800000000000001
+Iteration 48: Best Fitness = 0.9800000000000001
+Iteration 49: Best Fitness = 0.9800000000000001
+Iteration 50: Best Fitness = 0.9800000000000001
+Optimal C: 0.001, Optimal gamma: 0.001, Best fitness (accuracy): 0.9800000000000001
