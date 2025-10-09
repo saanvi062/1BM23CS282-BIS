@@ -1,0 +1,211 @@
+import random
+import numpy as np
+
+class AntColonyOptimization:
+    def __init__(self, num_jobs, num_machines, job_times, num_ants=10, max_iter=100, alpha=1, beta=2, rho=0.1, Q=100):
+        # Problem Setup
+        self.num_jobs = num_jobs
+        self.num_machines = num_machines
+        self.job_times = job_times  # Matrix of job processing times for each machine
+        
+        # ACO Parameters
+        self.num_ants = num_ants
+        self.max_iter = max_iter
+        self.alpha = alpha  # Pheromone importance
+        self.beta = beta    # Job time importance
+        self.rho = rho      # Evaporation rate
+        self.Q = Q          # Constant for pheromone update
+
+        # Initialize pheromone levels and visibility (1/job_time)
+        self.pheromone = np.ones((num_jobs, num_machines))
+        self.visibility = 1 / np.array(job_times)
+        
+    def calculate_makespan(self, schedule):
+        """Calculate makespan for a given schedule."""
+        machine_times = [0] * self.num_machines  # Time on each machine
+        for job, machine in enumerate(schedule):
+            machine_times[machine] += self.job_times[job][machine]
+        return max(machine_times)  # Makespan is the maximum time taken by any machine
+
+    def choose_next_machine(self, ant, job):
+        """Choose the next machine for a job based on pheromone and job times."""
+        pheromone = self.pheromone[job]
+        visibility = self.visibility[job]
+        pheromone_probabilities = pheromone ** self.alpha * visibility ** self.beta
+        total = pheromone_probabilities.sum()
+        probabilities = pheromone_probabilities / total
+        return np.random.choice(range(self.num_machines), p=probabilities)
+
+    def update_pheromone(self, schedules, makespans):
+        """Update pheromone matrix after all ants have constructed their schedules."""
+        # Evaporate pheromones
+        self.pheromone *= (1 - self.rho)
+
+        # Add pheromone from good solutions
+        for schedule, makespan in zip(schedules, makespans):
+            pheromone_contribution = self.Q / makespan
+            for job, machine in enumerate(schedule):
+                self.pheromone[job, machine] += pheromone_contribution
+
+    def run(self):
+        best_makespan = float('inf')
+        best_schedule = None
+
+        for iteration in range(self.max_iter):
+            schedules = []
+            makespans = []
+
+            # Construct solutions (schedules) for each ant
+            for _ in range(self.num_ants):
+                schedule = []
+                for job in range(self.num_jobs):
+                    machine = self.choose_next_machine(_, job)
+                    schedule.append(machine)
+                makespan = self.calculate_makespan(schedule)
+                schedules.append(schedule)
+                makespans.append(makespan)
+
+                if makespan < best_makespan:
+                    best_makespan = makespan
+                    best_schedule = schedule
+
+            # Update pheromone matrix based on the solutions
+            self.update_pheromone(schedules, makespans)
+
+            # Print iteration details
+            print(f"Iteration {iteration + 1}, Best Makespan: {best_makespan}")
+
+        return best_schedule, best_makespan
+
+# Example usage
+if __name__ == "__main__":
+    # Job processing times on different machines (job x machine)
+    job_times = [
+        [2, 4, 6],  # Job 1 times on machine 1, machine 2, machine 3
+        [3, 2, 5],  # Job 2 times on machine 1, machine 2, machine 3
+        [4, 3, 2],  # Job 3 times on machine 1, machine 2, machine 3
+        [5, 6, 4]   # Job 4 times on machine 1, machine 2, machine 3
+    ]
+    
+    num_jobs = len(job_times)
+    num_machines = len(job_times[0])
+
+    # Initialize Ant Colony Optimization
+    aco = AntColonyOptimization(num_jobs, num_machines, job_times)
+
+    # Run the ACO algorithm
+    best_schedule, best_makespan = aco.run()
+
+    print(f"\nBest schedule: {best_schedule}")
+    print(f"Best makespan: {best_makespan}")
+
+
+OUTPUT:
+Python 3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)] on win32
+Enter "help" below or click "Help" above for more information.
+
+= RESTART: C:/Users/Administrator/AppData/Local/Programs/Python/Python313/aco.py
+Iteration 1, Best Makespan: 6
+Iteration 2, Best Makespan: 5
+Iteration 3, Best Makespan: 5
+Iteration 4, Best Makespan: 5
+Iteration 5, Best Makespan: 5
+Iteration 6, Best Makespan: 5
+Iteration 7, Best Makespan: 5
+Iteration 8, Best Makespan: 5
+Iteration 9, Best Makespan: 5
+Iteration 10, Best Makespan: 5
+Iteration 11, Best Makespan: 5
+Iteration 12, Best Makespan: 5
+Iteration 13, Best Makespan: 5
+Iteration 14, Best Makespan: 5
+Iteration 15, Best Makespan: 5
+Iteration 16, Best Makespan: 5
+Iteration 17, Best Makespan: 5
+Iteration 18, Best Makespan: 5
+Iteration 19, Best Makespan: 5
+Iteration 20, Best Makespan: 5
+Iteration 21, Best Makespan: 5
+Iteration 22, Best Makespan: 5
+Iteration 23, Best Makespan: 5
+Iteration 24, Best Makespan: 5
+Iteration 25, Best Makespan: 5
+Iteration 26, Best Makespan: 5
+Iteration 27, Best Makespan: 5
+Iteration 28, Best Makespan: 5
+Iteration 29, Best Makespan: 5
+Iteration 30, Best Makespan: 5
+Iteration 31, Best Makespan: 5
+Iteration 32, Best Makespan: 5
+Iteration 33, Best Makespan: 5
+Iteration 34, Best Makespan: 5
+Iteration 35, Best Makespan: 5
+Iteration 36, Best Makespan: 5
+Iteration 37, Best Makespan: 5
+Iteration 38, Best Makespan: 5
+Iteration 39, Best Makespan: 5
+Iteration 40, Best Makespan: 5
+Iteration 41, Best Makespan: 5
+Iteration 42, Best Makespan: 5
+Iteration 43, Best Makespan: 5
+Iteration 44, Best Makespan: 5
+Iteration 45, Best Makespan: 5
+Iteration 46, Best Makespan: 5
+Iteration 47, Best Makespan: 5
+Iteration 48, Best Makespan: 5
+Iteration 49, Best Makespan: 5
+Iteration 50, Best Makespan: 5
+Iteration 51, Best Makespan: 5
+Iteration 52, Best Makespan: 5
+Iteration 53, Best Makespan: 5
+Iteration 54, Best Makespan: 5
+Iteration 55, Best Makespan: 5
+Iteration 56, Best Makespan: 5
+Iteration 57, Best Makespan: 5
+Iteration 58, Best Makespan: 5
+Iteration 59, Best Makespan: 5
+Iteration 60, Best Makespan: 5
+Iteration 61, Best Makespan: 5
+Iteration 62, Best Makespan: 5
+Iteration 63, Best Makespan: 5
+Iteration 64, Best Makespan: 5
+Iteration 65, Best Makespan: 5
+Iteration 66, Best Makespan: 5
+Iteration 67, Best Makespan: 5
+Iteration 68, Best Makespan: 5
+Iteration 69, Best Makespan: 5
+Iteration 70, Best Makespan: 5
+Iteration 71, Best Makespan: 5
+Iteration 72, Best Makespan: 5
+Iteration 73, Best Makespan: 5
+Iteration 74, Best Makespan: 5
+Iteration 75, Best Makespan: 5
+Iteration 76, Best Makespan: 5
+Iteration 77, Best Makespan: 5
+Iteration 78, Best Makespan: 5
+Iteration 79, Best Makespan: 5
+Iteration 80, Best Makespan: 5
+Iteration 81, Best Makespan: 5
+Iteration 82, Best Makespan: 5
+Iteration 83, Best Makespan: 5
+Iteration 84, Best Makespan: 5
+Iteration 85, Best Makespan: 5
+Iteration 86, Best Makespan: 5
+Iteration 87, Best Makespan: 5
+Iteration 88, Best Makespan: 5
+Iteration 89, Best Makespan: 5
+Iteration 90, Best Makespan: 5
+Iteration 91, Best Makespan: 5
+Iteration 92, Best Makespan: 5
+Iteration 93, Best Makespan: 5
+Iteration 94, Best Makespan: 5
+Iteration 95, Best Makespan: 5
+Iteration 96, Best Makespan: 5
+Iteration 97, Best Makespan: 5
+Iteration 98, Best Makespan: 5
+Iteration 99, Best Makespan: 5
+Iteration 100, Best Makespan: 5
+
+Best schedule: [np.int64(0), np.int64(1), np.int64(1), np.int64(2)]
+Best makespan: 5
+
