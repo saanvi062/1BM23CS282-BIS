@@ -1,0 +1,128 @@
+import numpy as np
+import random
+
+# Example DNA sequences (could be any pair of sequences)
+seq1 = "GATTACA"
+seq2 = "GCATGCU"
+
+# Substitution matrix (simplified for demonstration: match=1, mismatch=-1)
+substitution_matrix = {
+    ('A', 'A'): 1, ('A', 'C'): -1, ('A', 'G'): -1, ('A', 'T'): -1,
+    ('C', 'A'): -1, ('C', 'C'): 1, ('C', 'G'): -1, ('C', 'T'): -1,
+    ('G', 'A'): -1, ('G', 'C'): -1, ('G', 'G'): 1, ('G', 'T'): -1,
+    ('T', 'A'): -1, ('T', 'C'): -1, ('T', 'G'): -1, ('T', 'T'): 1
+}
+
+# Gap penalties (we'll optimize these)
+gap_penalty = -2
+gap_extension_penalty = -1
+
+# Needleman-Wunsch algorithm for global sequence alignment
+def needleman_wunsch(seq1, seq2, gap_penalty, gap_extension_penalty, substitution_matrix):
+    n = len(seq1)
+    m = len(seq2)
+
+    # Create the score matrix
+    score_matrix = np.zeros((n + 1, m + 1))
+
+    # Initialize the score matrix
+    for i in range(1, n + 1):
+        score_matrix[i][0] = score_matrix[i-1][0] + gap_penalty
+    for j in range(1, m + 1):
+        score_matrix[0][j] = score_matrix[0][j-1] + gap_penalty
+
+    # Fill in the score matrix
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            match = score_matrix[i-1][j-1] + substitution_matrix.get((seq1[i-1], seq2[j-1]), -1)
+            delete = score_matrix[i-1][j] + gap_penalty
+            insert = score_matrix[i][j-1] + gap_penalty
+            score_matrix[i][j] = max(match, delete, insert)
+
+    return score_matrix[n][m]
+
+# Cuckoo Search: Main Optimization Algorithm
+def cuckoo_search(n, p_a, T_max, bounds, seq1, seq2, substitution_matrix):
+    # Step 1: Initialize Population
+    population = []
+    for _ in range(n):
+        # Randomly generate gap penalty and gap extension penalty
+        gap_penalty = random.randint(bounds['gap_penalty'][0], bounds['gap_penalty'][1])
+        gap_extension_penalty = random.randint(bounds['gap_extension_penalty'][0], bounds['gap_extension_penalty'][1])
+        population.append((gap_penalty, gap_extension_penalty))
+
+    # Step 2: Evaluate Fitness
+    fitness = []
+    for params in population:
+        gap_penalty, gap_extension_penalty = params
+        score = needleman_wunsch(seq1, seq2, gap_penalty, gap_extension_penalty, substitution_matrix)
+        fitness.append(score)
+
+    # Step 3: Main Loop for Cuckoo Search
+    best_fitness = max(fitness)
+    best_params = population[fitness.index(best_fitness)]
+    
+    for t in range(T_max):
+        # Step 4: Lévy Flight (Generate new solutions)
+        new_population = []
+        for i in range(n):
+            gap_penalty, gap_extension_penalty = population[i]
+            # Apply Lévy flight (random jump) for exploration
+            new_gap_penalty = gap_penalty + random.uniform(-1, 1)  # Random mutation
+            new_gap_extension_penalty = gap_extension_penalty + random.uniform(-1, 1)
+            new_population.append((new_gap_penalty, new_gap_extension_penalty))
+
+        # Step 5: Evaluate New Population
+        new_fitness = []
+        for params in new_population:
+            gap_penalty, gap_extension_penalty = params
+            score = needleman_wunsch(seq1, seq2, gap_penalty, gap_extension_penalty, substitution_matrix)
+            new_fitness.append(score)
+
+        # Step 6: Abandon Worst Nests and Keep Best
+        num_abandon = int(p_a * n)
+        sorted_indices = np.argsort(new_fitness)[::-1]
+        for k in range(n - num_abandon, n):
+            new_population[sorted_indices[k]] = population[k]
+            new_fitness[sorted_indices[k]] = fitness[k]
+
+        # Update the best solution
+        max_fitness = max(new_fitness)
+        if max_fitness > best_fitness:
+            best_fitness = max_fitness
+            best_params = new_population[new_fitness.index(max_fitness)]
+
+        population = new_population
+        fitness = new_fitness
+
+    return best_params, best_fitness
+
+# Bounds for the gap penalties (we are optimizing them)
+bounds = {
+    'gap_penalty': (-5, -1),  # Gap penalty between -5 and -1
+    'gap_extension_penalty': (-3, -1)  # Gap extension penalty between -3 and -1
+}
+
+# Parameters for Cuckoo Search
+n = 20  # Number of nests (solutions)
+p_a = 0.25  # Fraction of worst nests to abandon
+T_max = 100  # Maximum number of iterations
+
+# Perform Cuckoo Search to find the optimal gap penalties
+best_params, best_fitness = cuckoo_search(n, p_a, T_max, bounds, seq1, seq2, substitution_matrix)
+
+print("Optimal Gap Penalty:", best_params[0])
+print("Optimal Gap Extension Penalty:", best_params[1])
+print("Best Alignment Score:", best_fitness)
+
+
+
+
+OUTPUT:
+Python 3.11.0 (main, Oct 24 2022, 18:26:48) [MSC v.1933 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license()" for more information.
+
+===== RESTART: C:/Users/Admin/AppData/Local/Programs/Python/Python311/cs.py ====
+Optimal Gap Penalty: 19.438543751894297
+Optimal Gap Extension Penalty: -15.273052692227322
+Best Alignment Score: 272.1396125265201
