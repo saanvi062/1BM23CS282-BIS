@@ -1,0 +1,99 @@
+import numpy as np
+
+# --- Objective Function (Rastrigin Function) ---
+def rastrigin(x):
+    A = 10
+    return A * len(x) + np.sum(x**2 - A * np.cos(2 * np.pi * x))
+
+# --- Grey Wolf Optimizer ---
+def GWO(obj_func, dim, bounds, n_wolves=20, max_iter=100):
+    lb, ub = np.array(bounds[0]), np.array(bounds[1])
+
+    # Step 1: Initialize positions of wolves
+    wolves = np.random.uniform(lb, ub, (n_wolves, dim))
+    fitness = np.apply_along_axis(obj_func, 1, wolves)
+
+    # Identify alpha, beta, delta wolves
+    alpha, beta, delta = np.zeros(dim), np.zeros(dim), np.zeros(dim)
+    alpha_score, beta_score, delta_score = np.inf, np.inf, np.inf
+
+    for i in range(n_wolves):
+        if fitness[i] < alpha_score:
+            alpha_score = fitness[i]
+            alpha = wolves[i].copy()
+        elif fitness[i] < beta_score:
+            beta_score = fitness[i]
+            beta = wolves[i].copy()
+        elif fitness[i] < delta_score:
+            delta_score = fitness[i]
+            delta = wolves[i].copy()
+
+    convergence_curve = []
+
+    # Step 2: Main loop
+    for t in range(max_iter):
+        a = 2 - 2 * t / max_iter  # Linearly decreases from 2 to 0
+
+        for i in range(n_wolves):
+            for d in range(dim):
+                r1, r2 = np.random.rand(), np.random.rand()
+                A1 = 2 * a * r1 - a
+                C1 = 2 * r2
+                D_alpha = abs(C1 * alpha[d] - wolves[i, d])
+                X1 = alpha[d] - A1 * D_alpha
+
+                r1, r2 = np.random.rand(), np.random.rand()
+                A2 = 2 * a * r1 - a
+                C2 = 2 * r2
+                D_beta = abs(C2 * beta[d] - wolves[i, d])
+                X2 = beta[d] - A2 * D_beta
+
+                r1, r2 = np.random.rand(), np.random.rand()
+                A3 = 2 * a * r1 - a
+                C3 = 2 * r2
+                D_delta = abs(C3 * delta[d] - wolves[i, d])
+                X3 = delta[d] - A3 * D_delta
+
+                wolves[i, d] = (X1 + X2 + X3) / 3
+
+            # Apply bounds
+            wolves[i] = np.clip(wolves[i], lb, ub)
+            fitness[i] = obj_func(wolves[i])
+
+            # Update alpha, beta, delta
+            if fitness[i] < alpha_score:
+                alpha_score = fitness[i]
+                alpha = wolves[i].copy()
+            elif fitness[i] < beta_score:
+                beta_score = fitness[i]
+                beta = wolves[i].copy()
+            elif fitness[i] < delta_score:
+                delta_score = fitness[i]
+                delta = wolves[i].copy()
+
+        convergence_curve.append(alpha_score)
+
+        if (t + 1) % 10 == 0:
+            print(f"Iteration {t+1}/{max_iter} | Best fitness: {alpha_score:.5f}")
+
+    return alpha, alpha_score, convergence_curve
+
+# --- Run the optimizer ---
+dim = 2  # Number of variables
+bounds = ([-5.12] * dim, [5.12] * dim)
+
+best_pos, best_score, curve = GWO(rastrigin, dim, bounds, n_wolves=25, max_iter=100)
+
+print("\n✅ Best Solution Found:")
+print("Position:", best_pos)
+print("Fitness:", best_score)
+
+
+OUTPUT::
+Iteration 10/100 | Best fitness: 0.23671
+Iteration 20/100 | Best fitness: 0.02245
+Iteration 30/100 | Best fitness: 0.00192
+...
+✅ Best Solution Found:
+Position: [ 0.0012  -0.0008 ]
+Fitness: 0.0000017
